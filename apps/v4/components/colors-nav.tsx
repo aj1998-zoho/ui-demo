@@ -3,16 +3,16 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
-import { getColors } from "@/lib/colors"
+import { type ColorPalette } from "@/lib/colors"
 import { cn } from "@/lib/utils"
 import { ScrollArea, ScrollBar } from "@/registry/new-york-v4/ui/scroll-area"
 
 export function ColorsNav({
   className,
+  colors,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div"> & { colors: ColorPalette[] }) {
   const pathname = usePathname()
-  const colors = getColors()
 
   return (
     <div className={cn("flex items-center", className)} {...props}>

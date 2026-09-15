@@ -1,4 +1,5 @@
 import * as React from "react"
+import dynamic from "next/dynamic"
 import Image from "next/image"
 import Link from "next/link"
 
@@ -13,7 +14,6 @@ import { ComponentPreview } from "@/components/component-preview"
 import { ComponentSource } from "@/components/component-source"
 import { ComponentsList } from "@/components/components-list"
 import { CopyButton } from "@/components/copy-button"
-import { DirectoryList } from "@/components/directory-list"
 import { getIconForLanguageExtension } from "@/components/icons"
 import {
   Accordion,
@@ -35,6 +35,10 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/registry/new-york-v4/ui/tabs"
+
+const DirectoryList = dynamic(() =>
+  import("@/components/directory-list").then((mod) => mod.DirectoryList)
+)
 
 // Wrapper component that passes the components folder from the server.
 // This is only used on /docs/components/ index page, so default to radix.

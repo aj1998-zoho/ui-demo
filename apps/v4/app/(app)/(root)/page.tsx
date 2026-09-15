@@ -69,6 +69,7 @@ export default function IndexPage() {
               height={2764}
               alt="Dashboard"
               className="block h-auto w-full dark:hidden"
+              sizes="100vw"
               priority
             />
             <Image
@@ -77,7 +78,7 @@ export default function IndexPage() {
               height={2764}
               alt="Dashboard"
               className="hidden h-auto w-full dark:block"
-              priority
+              sizes="100vw"
             />
           </section>
           <section className="hidden md:block">
