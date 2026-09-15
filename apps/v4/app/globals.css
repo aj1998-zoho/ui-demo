@@ -166,6 +166,7 @@
   }
   html {
     @apply overscroll-y-none;
+    --font-heading: var(--font-sans);
   }
   body {
     font-synthesis-weight: none;

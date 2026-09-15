@@ -3,21 +3,18 @@ import Link from "next/link"
 import { PlusSignIcon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
-import { getColors } from "@/lib/colors"
 import { siteConfig } from "@/lib/config"
 import { source } from "@/lib/source"
-import { CommandMenu } from "@/components/command-menu"
+import { CommandMenuLazy } from "@/components/command-menu-lazy"
+import { CreateHeaderActions } from "@/components/create-header-actions"
 import { GitHubLink } from "@/components/github-link"
 import { MainNav } from "@/components/main-nav"
 import { MobileNav } from "@/components/mobile-nav"
 import { ModeSwitcher } from "@/components/mode-switcher"
 import { Separator } from "@/registry/new-york-v4/ui/separator"
 import { Button } from "@/styles/radix-nova/ui/button"
-import { ProjectForm } from "@/app/(app)/create/components/project-form"
-import { V0Button } from "@/app/(app)/create/components/v0-button"
 
 export function SiteHeader() {
-  const colors = getColors()
   const pageTree = source.pageTree
 
   return (
@@ -32,11 +29,7 @@ export function SiteHeader() {
           <MainNav items={siteConfig.navItems} className="hidden lg:flex" />
           <div className="ml-auto flex items-center gap-2 md:flex-1 md:justify-end">
             <div className="hidden w-full flex-1 md:flex md:w-auto md:flex-none">
-              <CommandMenu
-                tree={pageTree}
-                colors={colors}
-                navItems={siteConfig.navItems}
-              />
+              <CommandMenuLazy tree={pageTree} navItems={siteConfig.navItems} />
             </div>
             <Separator
               orientation="vertical"
@@ -48,16 +41,13 @@ export function SiteHeader() {
             <div className="hidden items-center gap-2 group-has-data-[slot=designer]/layout:md:flex">
               <Separator orientation="vertical" />
               <Suspense fallback={null}>
-                <V0Button />
-              </Suspense>
-              <Suspense fallback={null}>
-                <ProjectForm />
+                <CreateHeaderActions variant="desktop" />
               </Suspense>
             </div>
             <div className="hidden items-center gap-2 group-has-data-[slot=designer]/layout:flex group-has-data-[slot=designer]/layout:md:hidden">
               <Separator orientation="vertical" />
               <Suspense fallback={null}>
-                <V0Button />
+                <CreateHeaderActions variant="mobile" />
               </Suspense>
             </div>
             <div className="flex items-center gap-2 group-has-data-[slot=designer]/layout:hidden">

@@ -35,8 +35,14 @@ export function getColorFormat(color: Color) {
 
 export type ColorFormat = keyof ReturnType<typeof getColorFormat>
 
+let cachedColors: ColorPalette[] | undefined
+
 export function getColors() {
-  const tailwindColors = colorPaletteSchema.array().parse(
+  if (cachedColors) {
+    return cachedColors
+  }
+
+  cachedColors = colorPaletteSchema.array().parse(
     Object.entries(colors)
       .map(([name, color]) => {
         if (!Array.isArray(color)) {
@@ -74,7 +80,7 @@ export function getColors() {
       .filter(Boolean)
   )
 
-  return tailwindColors
+  return cachedColors
 }
 
 export type Color = ReturnType<typeof getColors>[number]["colors"][number]

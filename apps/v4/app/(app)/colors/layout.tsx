@@ -1,6 +1,7 @@
 import { type Metadata } from "next"
 import Link from "next/link"
 
+import { getColors } from "@/lib/colors"
 import { Announcement } from "@/components/announcement"
 import { ColorsNav } from "@/components/colors-nav"
 import {
@@ -62,7 +63,10 @@ export default function ColorsLayout({
       <div className="hidden">
         <div className="container-wrapper">
           <div className="container flex items-center justify-between gap-8 py-4">
-            <ColorsNav className="flex-1 overflow-hidden [&>a:first-child]:text-primary" />
+            <ColorsNav
+              colors={getColors()}
+              className="flex-1 overflow-hidden [&>a:first-child]:text-primary"
+            />
           </div>
         </div>
       </div>

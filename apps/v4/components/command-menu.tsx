@@ -7,7 +7,7 @@ import { useDocsSearch } from "fumadocs-core/search/client"
 import { CornerDownLeftIcon, SquareDashedIcon } from "lucide-react"
 import { Dialog as DialogPrimitive } from "radix-ui"
 
-import { type Color, type ColorPalette } from "@/lib/colors"
+import { getColors, type Color, type ColorPalette } from "@/lib/colors"
 import { trackEvent } from "@/lib/events"
 import { showMcpDocs } from "@/lib/flags"
 import { getCurrentBase, getPagesFromFolder } from "@/lib/page-tree"
@@ -37,24 +37,29 @@ import {
 import { Separator } from "@/registry/new-york-v4/ui/separator"
 import { Spinner } from "@/registry/new-york-v4/ui/spinner"
 
+export type CommandMenuProps = React.ComponentProps<typeof Dialog> & {
+  tree: typeof source.pageTree
+  colors?: ColorPalette[]
+  blocks?: { name: string; description: string; categories: string[] }[]
+  navItems?: { href: string; label: string }[]
+  defaultOpen?: boolean
+}
+
 export function CommandMenu({
   tree,
   colors,
   blocks,
   navItems,
+  defaultOpen = false,
   ...props
-}: React.ComponentProps<typeof Dialog> & {
-  tree: typeof source.pageTree
-  colors: ColorPalette[]
-  blocks?: { name: string; description: string; categories: string[] }[]
-  navItems?: { href: string; label: string }[]
-}) {
+}: CommandMenuProps) {
   const router = useRouter()
   const pathname = usePathname()
   const [config] = useConfig()
   const currentBase = getCurrentBase(pathname)
-  const [open, setOpen] = React.useState(false)
-  const [renderDelayedGroups, setRenderDelayedGroups] = React.useState(false)
+  const [open, setOpen] = React.useState(defaultOpen)
+  const [renderDelayedGroups, setRenderDelayedGroups] =
+    React.useState(defaultOpen)
   const [selectedType, setSelectedType] = React.useState<
     "color" | "page" | "component" | "block" | null
   >(null)
@@ -209,6 +214,10 @@ export function CommandMenu({
   }, [navItems, runCommand, router])
 
   const pageGroupsSection = React.useMemo(() => {
+    if (!open) {
+      return null
+    }
+
     return tree.children.map((group) => {
       if (group.type !== "folder") {
         return null
@@ -259,10 +268,23 @@ export function CommandMenu({
         </CommandGroup>
       )
     })
-  }, [tree.children, currentBase, handlePageHighlight, runCommand, router])
+  }, [
+    open,
+    tree.children,
+    currentBase,
+    handlePageHighlight,
+    runCommand,
+    router,
+  ])
 
   const colorGroupsSection = React.useMemo(() => {
-    return colors.map((colorPalette) => (
+    if (!open) {
+      return null
+    }
+
+    const colorPalettes = colors ?? getColors()
+
+    return colorPalettes.map((colorPalette) => (
       <CommandGroup
         key={colorPalette.name}
         heading={
@@ -297,10 +319,10 @@ export function CommandMenu({
         ))}
       </CommandGroup>
     ))
-  }, [colors, handleColorHighlight, runCommand])
+  }, [open, colors, handleColorHighlight, runCommand])
 
   const blocksSection = React.useMemo(() => {
-    if (!blocks || blocks.length === 0) {
+    if (!open || !blocks || blocks.length === 0) {
       return null
     }
 
@@ -337,7 +359,7 @@ export function CommandMenu({
         ))}
       </CommandGroup>
     )
-  }, [blocks, handleBlockHighlight, runCommand, router])
+  }, [open, blocks, handleBlockHighlight, runCommand, router])
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -465,6 +487,11 @@ export function CommandMenu({
   )
 }
 
+const HIGHLIGHT_OBSERVER_OPTIONS: MutationObserverInit = {
+  attributes: true,
+  attributeFilter: ["aria-selected"],
+}
+
 function CommandMenuItem({
   children,
   className,
@@ -476,18 +503,25 @@ function CommandMenuItem({
   "aria-selected"?: string
 }) {
   const ref = React.useRef<HTMLDivElement>(null)
+  const onHighlightRef = React.useRef(onHighlight)
 
-  useMutationObserver(ref, (mutations) => {
-    mutations.forEach((mutation) => {
+  React.useEffect(() => {
+    onHighlightRef.current = onHighlight
+  }, [onHighlight])
+
+  const handleMutations = React.useCallback((mutations: MutationRecord[]) => {
+    for (const mutation of mutations) {
       if (
-        mutation.type === "attributes" &&
         mutation.attributeName === "aria-selected" &&
         ref.current?.getAttribute("aria-selected") === "true"
       ) {
-        onHighlight?.()
+        onHighlightRef.current?.()
+        break
       }
-    })
-  })
+    }
+  }, [])
+
+  useMutationObserver(ref, handleMutations, HIGHLIGHT_OBSERVER_OPTIONS)
 
   return (
     <CommandItem
@@ -533,12 +567,23 @@ function SearchResults({
       return []
     }
 
-    return query.data.filter(
-      (item, index, self) =>
-        !(
-          item.type === "text" && item.content.trim().split(/\s+/).length <= 1
-        ) && index === self.findIndex((t) => t.content === item.content)
-    )
+    const seen = new Set<string>()
+
+    return query.data.filter((item) => {
+      if (
+        item.type === "text" &&
+        item.content.trim().split(/\s+/).length <= 1
+      ) {
+        return false
+      }
+
+      if (seen.has(item.content)) {
+        return false
+      }
+
+      seen.add(item.content)
+      return true
+    })
   }, [query.data])
 
   if (!search.trim()) {
